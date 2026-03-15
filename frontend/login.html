@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Math Tutor 로그인</title>
+  <link rel="stylesheet" href="css/app.css?v=3">
+</head>
+
+<body class="login-page">
+  <!-- 로그인/회원가입 배경 장식 -->
+  <div class="math-bg">
+    <span class="math-symbol symbol-1">＋</span>
+    <span class="math-symbol symbol-2">×</span>
+    <span class="math-symbol symbol-3">÷</span>
+    <span class="math-symbol symbol-4">△</span>
+    <span class="math-symbol symbol-5">1234</span>
+    <span class="math-symbol symbol-6">√</span>
+    <span class="math-symbol symbol-7">＝</span>
+  </div>
+
+  <div class="login-container">
+    <div class="login-card">
+      <!-- 상단 아이콘/제목 영역 -->
+      <div class="login-header">
+        <div class="login-badge">✏️</div>
+        <h1>AI Math Tutor 로그인</h1>
+        <p class="login-subtitle">즐겁게 수학 공부를 시작해보자</p>
+      </div>
+
+      <!-- 로그인 폼 -->
+      <div class="login-form">
+        <div class="input-block">
+          <label for="username">아이디</label>
+          <input type="text" id="username" placeholder="아이디를 입력해줘">
+        </div>
+
+        <div class="input-block">
+          <label for="password">비밀번호</label>
+          <input type="password" id="password" placeholder="비밀번호를 입력해줘" required>
+        </div>
+
+        <div class="btn-group">
+          <button type="button" class="login-btn" onclick="login()">로그인</button>
+          <button type="button" class="signup-btn" onclick="openSignupModal()">회원가입</button>
+        </div>
+
+        <p class="login-bottom-text">오늘도 차근차근 같이 풀어보자</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 회원가입 모달 -->
+  <div id="signup-modal" class="modal hidden">
+    <div class="modal-content signup-modal-content">
+      <div class="signup-header">
+        <div class="signup-badge">🌼</div>
+        <div>
+          <h2>회원가입</h2>
+          <p class="signup-subtitle">정보를 입력하고 캐릭터를 골라줘</p>
+        </div>
+      </div>
+
+      <div class="signup-form-grid">
+        <input type="text" id="signup-name" placeholder="이름 입력">
+        <input type="text" id="signup-nickname" placeholder="닉네임 입력">
+        <input type="text" id="signup-id" placeholder="아이디 입력">
+        <input type="password" id="signup-password" placeholder="비밀번호 입력" required>
+      </div>
+
+      <div class="character-section">
+        <p class="character-title">캐릭터 선택</p>
+
+        <div class="character-list">
+          <button type="button" class="character-btn" data-character="bunny">
+            <img src="assets/images/bunny.png" alt="버니">
+            <span>버니</span>
+          </button>
+
+          <button type="button" class="character-btn" data-character="piyo">
+            <img src="assets/images/piyo.png" alt="삐요">
+            <span>삐요</span>
+          </button>
+
+          <button type="button" class="character-btn" data-character="popo">
+            <img src="assets/images/popo.png" alt="포포">
+            <span>포포</span>
+          </button>
+
+          <button type="button" class="character-btn" data-character="roki">
+            <img src="assets/images/roki.png" alt="로키">
+            <span>로키</span>
+          </button>
+
+          <button type="button" class="character-btn" data-character="rumi">
+            <img src="assets/images/rumi.png" alt="로미">
+            <span>로미</span>
+          </button>
+
+          <button type="button" class="character-btn" data-character="tori">
+            <img src="assets/images/tori.png" alt="토리">
+            <span>토리</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-btn-group">
+        <button type="button" class="complete-btn" onclick="signup()">가입완료</button>
+        <button type="button" class="close-btn" onclick="closeSignupModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 전역 공통 함수 (login, apiFetch, showCustomPopup 등) -->
+  <script src="js/app.js"></script>
+
+  <script>
+    document.getElementById("password").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") login();
+    });
+
+    function openSignupModal() {
+      document.getElementById("signup-modal").classList.remove("hidden");
+    }
+
+    function closeSignupModal() {
+      document.getElementById("signup-modal").classList.add("hidden");
+    }
+
+    async function signup() {
+      const name      = document.getElementById("signup-name").value.trim();
+      const nickname  = document.getElementById("signup-nickname").value.trim();
+      const username  = document.getElementById("signup-id").value.trim();
+      const password  = document.getElementById("signup-password").value.trim();
+      const selectedCharacter = document.querySelector(".character-btn.selected");
+
+      if (!name || !nickname || !username || !password) {
+        showCustomPopup("모든 항목을 입력해 주세요.😄");
+        return;
+      }
+      if (!selectedCharacter) {
+        showCustomPopup("캐릭터를 선택해 주세요.😄");
+        return;
+      }
+
+      const character = selectedCharacter.dataset.character;
+
+      try {
+        const response = await fetch("/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, nickname, username, password, character })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showCustomPopup("회원가입 완료!😄");
+          closeSignupModal();
+        } else {
+          showCustomPopup(data.detail || "회원가입 실패!😢");
+        }
+      } catch (error) {
+        console.log(error);
+        showCustomPopup("회원가입 중 오류가 발생했어요.😢");
+      }
+    }
+  </script>
+
+  <div id="custom-popup" class="popup-overlay">
+  <div class="popup-box">
+    <div id="popup-message"></div>
+    <button onclick="closeCustomPopup()">확인</button>
+  </div>
+</div>
+
+</body>
+</html>

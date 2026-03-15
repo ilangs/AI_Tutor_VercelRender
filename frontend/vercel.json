@@ -1,0 +1,28 @@
+{
+  "routes": [
+    {
+      "src": "/auth/(.*)",
+      "dest": "https://YOUR-RENDER-APP.onrender.com/auth/$1"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "https://YOUR-RENDER-APP.onrender.com/api/$1"
+    },
+    {
+      "src": "/health",
+      "dest": "https://YOUR-RENDER-APP.onrender.com/health"
+    },
+    {
+      "src": "/main",
+      "dest": "/app.html"
+    },
+    {
+      "src": "/",
+      "dest": "/login.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
