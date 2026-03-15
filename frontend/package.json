@@ -1,7 +1,0 @@
-{
-  "name": "ai-math-tutor-frontend",
-  "version": "1.0.0",
-  "scripts": {
-    "build": "git lfs pull || true"
-  }
-}
