@@ -65,6 +65,50 @@ LangChain · LangGraph · FastAPI · ChromaDB · OpenAI GPT-4o
 
 ---
 
+## 폴더 구조 정리
+
+```
+AI_Tutor_VercelRender/           ← GitHub 루트 저장소
+├── .env                         ← 로컬 개발용 (절대 GitHub에 올리지 말것!)
+├── .gitignore
+├── README.md
+├── DEPLOY_GUIDE.md              
+│
+├── backend/                     ← Render가 이 폴더를 배포
+│   ├── Dockerfile               ← Docker 빌드 설정
+│   ├── render.yaml              ← Render 서비스 설정
+│   ├── server.py                ← FastAPI 진입점
+│   ├── requirements.txt         ← Python 패키지 목록
+│   ├── app/
+│   │   ├── routers/             ← API 라우터 (auth.py, tutor.py)
+│   │   ├── services/            ← 비즈니스 로직
+│   │   ├── tutor/               ← LangGraph AI 튜터
+│   │   └── utils/               ← DB 관리, 유틸리티
+│   ├── RAG_sys/                 ← RAG 파이프라인
+│   ├── data/processed/          ← 수학 문제 데이터셋 CSV
+│   ├── database/                ← SQLite DB + ChromaDB (서버에서 생성)
+│   └── assets/audio/            ← TTS 오디오 파일 (서버에서 생성)
+│
+└── frontend/                    ← Vercel이 이 폴더를 배포
+    ├── vercel.json              ← Vercel 라우팅 + Render 프록시 설정
+    ├── login.html               ← 로그인/회원가입 페이지
+    ├── app.html                 ← 메인 앱 (SPA)
+    ├── css/app.css              ← 전체 스타일
+    ├── js/
+    │   ├── app.js               ← 공통 모듈 (JWT, API, SPA 라우팅)
+    │   ├── section1.js          ← 오늘의 학습
+    │   ├── section2.js          ← 자유학습 채팅
+    │   ├── section3.js          ← 시험
+    │   ├── section4.js          ← 성적 대시보드
+    │   └── section5.js          ← 토큰 사용 로그
+    └── assets/
+        ├── images/              ← 캐릭터 이미지
+        ├── fonts/               ← 한글 폰트
+        └── animations/          ← 동영상
+```
+
+---
+
 ## 💻 로컬 개발
 
 ```bash
@@ -82,13 +126,13 @@ python -m uvicorn server:app --reload --port 10000
 교육 목적으로 제작된 프로젝트입니다. (AI Agent 과정)
 
 ```
-AI_Tutor_render_versel/
-├── .env.eample
+AI_Tutor_VercelRender/
+├── .env
 ├── .gitignore
 ├── README.md
-├── backend/              
+├── backend/
 │   ├── app/
-│   ├── aseets/
+│   ├── assets/
 │   ├── RAG_sys/
 │   ├── data/
 │   ├── database/
@@ -96,7 +140,7 @@ AI_Tutor_render_versel/
 │   ├── requirements.txt
 │   ├── render.yaml
 │   └── Dockerfile
-└── frontend/              
+└── frontend/
     ├── login.html
     ├── app.html
     ├── vercel.json

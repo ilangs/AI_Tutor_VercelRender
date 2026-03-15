@@ -2,15 +2,15 @@
   "routes": [
     {
       "src": "/auth/(.*)",
-      "dest": "https://YOUR-RENDER-APP.onrender.com/auth/$1"
+      "dest": "https://ai-math-tutor-3yw6.onrender.com/auth/$1"
     },
     {
       "src": "/api/(.*)",
-      "dest": "https://YOUR-RENDER-APP.onrender.com/api/$1"
+      "dest": "https://ai-math-tutor-3yw6.onrender.com/api/$1"
     },
     {
       "src": "/health",
-      "dest": "https://YOUR-RENDER-APP.onrender.com/health"
+      "dest": "https://ai-math-tutor-3yw6.onrender.com/health"
     },
     {
       "src": "/main",

@@ -39,6 +39,7 @@ class UserInfo(BaseModel):
 
 class RegisterRequest(BaseModel):
     """POST /auth/register 요청 데이터 구조."""
+    name: str | None = None
     username: str
     password: str
     nickname: str
