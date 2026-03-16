@@ -26,7 +26,7 @@ load_dotenv()
 api_key = os.environ.get("OPENAI_API_KEY")
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.5)
+llm = ChatOpenAI(model="gpt-4o", temperature=0.7)
 
 
 # ── TTS 캐싱 ──
