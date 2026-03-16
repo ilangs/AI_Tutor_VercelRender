@@ -663,6 +663,10 @@ body {
     color:#4b5c48;
 }
 
+#step-select_unit select {
+    margin-bottom: 0px;
+}
+
 .card button {
     padding: 14px 20px;
     font-size: 18px;
@@ -685,6 +689,10 @@ body {
     flex-wrap: wrap;
 }
 
+#exam-unit-select {
+    margin-bottom: 0;
+}
+
 .box {
     border: 1px solid #dce7d2;
     background: rgba(255,255,255,0.82);
@@ -694,6 +702,12 @@ body {
     box-sizing: border-box;
     white-space: pre-wrap;
     border-radius: 18px;
+}
+
+#exam-timer-box {
+    width: fit-content;
+    min-width: 700px;
+    padding: 8px 14px;
 }
 
 /* 오늘 학습 선택줄 정리 */
@@ -784,7 +798,7 @@ body {
 
 .modal-header h2 {
     margin: 0;
-    font-size: 40px;
+    font-size: 35px;
 }
 
 .modal-header button {
@@ -867,16 +881,27 @@ textarea {
     border-radius: 18px;
 }
 
+.summary-card div:first-child {
+  font-size: 18px;
+  font-weight: 600;
+}
+
 .summary-label {
     font-size: 15px;
     color: #666;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
 .summary-value {
     font-size: 24px;
     font-weight: bold;
     color: #111;
+}
+
+.score-dashboard h2,
+.graph-card h2,
+.log-card h2 {
+    color: #000;
 }
 
 .graph-card,
@@ -896,7 +921,7 @@ textarea {
 .score-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 16px;
+    font-size: 17px;
 }
 
 .score-table th {
@@ -904,6 +929,8 @@ textarea {
     padding: 14px 12px;
     border-bottom: 2px solid #ddd;
     background: #f7f7f7;
+    font-size: 18px;
+    font-weight: 700;
 }
 
 .score-table td {
@@ -917,8 +944,8 @@ textarea {
 
 .status-badge {
     display: inline-block;
-    padding: 6px 10px;
-    font-size: 14px;
+    padding: 8px 14px;
+    font-size: 16px;
     border: 1px solid #ccc;
     background: #fff;
     border-radius: 10px;
@@ -979,7 +1006,7 @@ textarea {
 .free-msg-bubble {
     max-width: 70%;
     padding: 14px 18px;
-    font-size: 17px;
+    font-size: 20px;
     line-height: 1.7;
     word-break: break-word;
     white-space: pre-wrap;
@@ -1166,52 +1193,44 @@ body, .app-shell {
     background:#e6f1da;
 }
 
+.floating-heart {
+  position: fixed;
+  bottom: -30px;
+  z-index: 9999;
+  pointer-events: none;
+  animation-name: floatUpHeart;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
 
-/* ============================================================
-   반응형 레이아웃 - clamp() 방식 (vw 비율 자동 축소)
-   공식: clamp(최솟값, px/1920*100 vw, 원본px)
-   브레이크포인트 없이 화면 너비에 비례해 부드럽게 축소됨
-============================================================ */
+@keyframes floatUpHeart {
+  0% {
+    transform: translateY(0) translateX(0) scale(0.8);
+    opacity: 0;
+  }
 
-/* 사이드바 너비: 480px → 1280px 화면에서 약 320px */
-.sidebar               { width: clamp(200px, 25vw, 480px); }
+  15% {
+    opacity: 1;
+  }
 
-/* 헤더 캐릭터 이미지: 110px → 1280px에서 약 73px */
-#user-character        { width: clamp(56px, 5.7vw, 110px);
-                         height: clamp(56px, 5.7vw, 110px); }
+  50% {
+    transform: translateY(-35vh) translateX(-10px) scale(1);
+    opacity: 1;
+  }
 
-/* 헤더 타이틀: 42px → 1280px에서 약 28px */
-#sidebar-title         { font-size: clamp(18px, 2.2vw, 42px); }
+  100% {
+    transform: translateY(-90vh) translateX(20px) scale(1.1);
+    opacity: 0;
+  }
+}
 
-/* 헤더 패딩 */
-.top-header            { padding: clamp(10px, 0.9vw, 18px) clamp(20px, 2.2vw, 42px); }
+.graph-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
 
-/* 메뉴 버튼: 24px → 1280px에서 약 16px */
-.menu button,
-.back-link             { font-size: clamp(13px, 1.25vw, 24px);
-                         padding: clamp(10px, 0.9vw, 18px) clamp(12px, 1vw, 20px); }
+.graph-scroll svg {
+  display: block;
+  min-width: 800px;
+}
 
-/* 사이드 안내박스 */
-.menu-guide h3         { font-size: clamp(15px, 1.46vw, 28px); }
-.menu-guide p          { font-size: clamp(12px, 0.94vw, 18px); }
-
-/* 메인 콘텐츠 패딩 */
-.content               { padding: clamp(18px, 1.9vw, 36px) clamp(20px, 2.1vw, 40px); }
-
-/* 섹션 제목 h1: 48px → 1280px에서 약 32px */
-#page-home h1,
-#page-today h1,
-#page-free h1,
-#page-exam h1,
-#page-score h1,
-#page-token h1         { font-size: clamp(22px, 2.5vw, 48px); }
-
-/* 카드 제목: 32px → 1280px에서 약 21px */
-.card h2               { font-size: clamp(16px, 1.67vw, 32px); }
-.card label            { font-size: clamp(13px, 1.15vw, 22px); }
-
-/* 모달 헤더: 40px → 1280px에서 약 27px */
-.modal-header h2       { font-size: clamp(18px, 2.08vw, 40px); }
-
-/* 모달 본문: 20px → 1280px에서 약 13px */
-.modal-body            { font-size: clamp(13px, 1.04vw, 20px); }

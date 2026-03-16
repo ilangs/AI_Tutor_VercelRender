@@ -2,9 +2,8 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Math Tutor 로그인</title>
-  <link rel="stylesheet" href="css/app.css?v=3">
+  <link rel="stylesheet" href="css/app.css">
 </head>
 
 <body class="login-page">
@@ -25,7 +24,7 @@
       <div class="login-header">
         <div class="login-badge">✏️</div>
         <h1>AI Math Tutor 로그인</h1>
-        <p class="login-subtitle">즐겁게 수학 공부를 시작해보자</p>
+        <p class="login-subtitle">즐거운 수학 공부를 시작해보자!</p>
       </div>
 
       <!-- 로그인 폼 -->
@@ -45,7 +44,7 @@
           <button type="button" class="signup-btn" onclick="openSignupModal()">회원가입</button>
         </div>
 
-        <p class="login-bottom-text">오늘도 차근차근 같이 풀어보자</p>
+        <p class="login-bottom-text">루미 선생님과 함께하는 수학 교실 💛</p>
       </div>
     </div>
   </div>
@@ -115,52 +114,94 @@
   <script src="js/app.js"></script>
 
   <script>
+    /* ─────────────────────────────────────────────────────────
+     * login.html 전용 인라인 스크립트
+     *
+     * [포함 기능]
+     *   - Enter 키로 로그인 단축키 지원
+     *   - openSignupModal() / closeSignupModal() : 회원가입 모달 열고 닫기
+     *   - signup() : 회원가입 폼 데이터를 서버에 POST 요청
+     *
+     * [API - 회원가입]
+     *   엔드포인트: POST /auth/register
+     *   전송 데이터: { name, nickname, username, password, character }
+     *   응답 성공:  HTTP 200 (가입 완료)
+     *   응답 실패:  { detail: "오류 메시지" }
+     * ───────────────────────────────────────────────────────── */
+
+    /* 비밀번호 입력창에서 Enter 키 누르면 바로 로그인 */
     document.getElementById("password").addEventListener("keypress", (e) => {
-      if (e.key === "Enter") login();
+      if (e.key === "Enter") {
+        login();
+      }
     });
 
+    /* 회원가입 모달 열기 */
     function openSignupModal() {
       document.getElementById("signup-modal").classList.remove("hidden");
     }
 
+    /* 회원가입 모달 닫기 */
     function closeSignupModal() {
       document.getElementById("signup-modal").classList.add("hidden");
     }
 
+    /**
+     * signup()
+     * 회원가입 폼의 입력값을 검증하고 서버에 가입 요청을 전송합니다.
+     * 성공 시 팝업 안내 후 모달을 닫고, 실패 시 오류 메시지를 표시합니다.
+     */
     async function signup() {
+      // 입력 필드 값 수집 (앞뒤 공백 제거)
       const name      = document.getElementById("signup-name").value.trim();
       const nickname  = document.getElementById("signup-nickname").value.trim();
       const username  = document.getElementById("signup-id").value.trim();
       const password  = document.getElementById("signup-password").value.trim();
       const selectedCharacter = document.querySelector(".character-btn.selected");
 
+      // 필수 항목 미입력 검사
       if (!name || !nickname || !username || !password) {
         showCustomPopup("모든 항목을 입력해 주세요.😄");
         return;
       }
+
+      // 캐릭터 미선택 검사
       if (!selectedCharacter) {
         showCustomPopup("캐릭터를 선택해 주세요.😄");
         return;
       }
 
+      // 선택한 캐릭터의 data-character 속성값 가져오기 (예: "rumi", "bunny")
       const character = selectedCharacter.dataset.character;
 
       try {
+        // POST /auth/register: 회원가입 요청
         const response = await fetch("/auth/register", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, nickname, username, password, character })
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            name:      name,
+            nickname:  nickname,
+            username:  username,
+            password:  password,
+            character: character
+          })
         });
 
         const data = await response.json();
 
         if (response.ok) {
+          // 가입 성공: 안내 팝업 표시 후 모달 닫기
           showCustomPopup("회원가입 완료!😄");
           closeSignupModal();
         } else {
+          // 서버 오류 (중복 아이디 등): 서버 메시지 또는 기본 메시지 표시
           showCustomPopup(data.detail || "회원가입 실패!😢");
         }
       } catch (error) {
+        // 네트워크 오류 등 예외 처리
         console.log(error);
         showCustomPopup("회원가입 중 오류가 발생했어요.😢");
       }

@@ -36,7 +36,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Math Tutor</title>
 
-  <link rel="stylesheet" href="css/app.css?v=3">
+  <link rel="stylesheet" href="css/app.css">
 
   <!-- MathJax 설정: 인라인 수식 구분자를 $...$ 와 \(...\) 두 형식 모두 허용 -->
   <script>
@@ -70,7 +70,7 @@
 <aside class="sidebar">
 <div class="menu">
 <button onclick="goPage('today')">🐶 오늘의 학습</button>
-<div class="back-link" onclick="goHome()">⬆️ 다른 단원 선택하기</div>
+<!--<div class="back-link" onclick="goHome()">⬆️ 다른 단원 선택하기</div>-->
 <button onclick="goPage('free')">🐰 AI 자유 학습</button>
 <button onclick="goPage('exam')">🦖 시험</button>
 <button onclick="goPage('score')">🏆 성적 로그</button>
@@ -144,10 +144,11 @@ preload="auto"
 <h2>📖 오늘의 학습 단원</h2>
 <label>어떤 단원을 배워볼까요?</label>
 <select id="unit-select">
+
 <option value="">단원 선택</option>
 </select>
 
-<button id="btn-start">공부 시작하기</button>
+<button id="btn-start" style="margin-left:7px;">공부 시작하기</button>
 </section>
 
 <section id="step-explain" class="card" style="display:none;">
@@ -209,7 +210,7 @@ preload="auto"
 ========================= -->
 
 <section id="page-free" class="page" style="display:none;">
-<h1>🤖 AI 자유학습</h1>
+<h1>🤖 AI Practice</h1>
 <div class="card free-chat-card">
 <div id="free-chat-messages" class="free-chat-messages"></div>
 <div class="free-chat-input-area">
@@ -239,24 +240,24 @@ type="button"
 ========================= -->
 
 <section id="page-exam" class="page" style="display:none;">
-<h1>📝 시험</h1>
+<h1>📝 Math Quiz</h1>
 
 <div class="card">
+  <h2>📒 시험 단원 선택</h2>
+  <label>어떤 단원으로 시험을 볼까요?</label>
 
-<h2>시험 단원 선택</h2>
+  <div class="row" style="margin-top:14px;">
+    <select id="exam-unit-select" style="width:700px;">
+      <option value="">단원 선택</option>
+    </select>
 
-<select id="exam-unit-select">
-<option value="">단원 선택</option>
-</select>
+    <button id="exam-make-btn">시험지 만들기</button>
+    <button id="exam-start-btn" disabled>시험 시작</button>
+  </div>
 
-<div class="row" style="margin-top:14px;">
-<button id="exam-make-btn">시험지 만들기</button>
-<button id="exam-start-btn" disabled>시험 시작</button>
-</div>
-
-<div id="exam-timer-box" class="box" style="margin-top:20px; display:none;">
-⏰ 남은 시간 : <span id="exam-timer-display">40:00</span>
-</div>
+  <div id="exam-timer-box" class="box" style="margin-top:20px; display:none;">
+  ⏰ 남은 시간 : <span id="exam-timer-display">40:00</span>
+  </div>
 
 </div>
 
@@ -274,7 +275,7 @@ type="button"
 ========================= -->
 
 <section id="page-score" class="page" style="display:none;">
-<h1>📊 성적로그</h1>
+<h1>📊 My Scores</h1>
 <div class="card" id="score-log-card">
 <p style="color:#999;">로딩 중...</p>
 </div>
@@ -286,7 +287,7 @@ type="button"
 ========================= -->
 
 <section id="page-token" class="page" style="display:none;">
-<h1>🪙 토큰로그</h1>
+<h1>🪙 Usage Log</h1>
 <div class="card">토큰로그 화면 자리</div>
 </section>
 
@@ -326,12 +327,12 @@ type="button"
   <div id="feedbackModal" class="modal hidden" style="display:none;">
     <div class="modal-box">
       <div class="modal-header">
-        <h2 id="feedbackTitle">👨‍🏫AI 선생님의 피드백</h2>
+        <h2 id="feedbackTitle">👨‍🏫 AI 선생님의 피드백</h2>
         <button id="closeFeedbackModalBtn" type="button">X</button>
       </div>
       <div class="modal-body">
         <div class="solution-box" style="display:block;">
-          <p id="feedbackText"></p>
+          <p id="feedbackText" style="padding:40px 20px 0 20px; font-size:1.3rem; color:#444;"></p>
         </div>
       </div>
       <div class="modal-footer">
