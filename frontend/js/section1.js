@@ -1,18 +1,28 @@
 /**
  * section1.js - 오늘 학습 섹션
- * 흐름: 단원 선택 → AI 개념 설명 → 학생 설명 → 이해도 평가 → 문제 풀기 → AI 채점
- * 의존: apiFetch, renderMath, openResultModal, closeResultModal,
- *       openFeedbackModal, closeFeedbackModal (app.js)
+ * 학습 흐름: 단원선택 → AI개념설명 → 학생직접설명 → 이해도평가 → 문제풀이 → 채점
+ * 사용 페이지: app.html (id="page-today")
+ * 외부 의존: apiFetch, renderMath, openResultModal, closeResultModal,
+ *            openFeedbackModal, closeFeedbackModal (app.js)
  */
 
-let currentAnswer = "";
-let currentQuestionText = "";
-let currentModalAudio = null;
-// TTS 상태: "idle" | "loading" | "playing" | "paused"
-let currentModalTtsState = "idle";
+// ─── 전역 변수 ─────────────────────────────────────────────────
+let currentAnswer = "";           // 현재 문제 정답 (채점 비교용)
+let currentQuestionText = "";     // 현재 문제 텍스트
+let currentModalAudio = null;     // 모달 TTS Audio 객체
+let currentModalTtsState = "idle"; // TTS 상태: idle / loading / playing / paused
 
-// TTS 재생/일시정지 토글 (POST /api/tts)
+// ─── 모달 TTS ──────────────────────────────────────────────────
+
+/**
+ * 풀이 모달 내 TTS 버튼 토글 (재생/일시정지/이어서재생)
+ * 상태 흐름: idle → loading → playing ↔ paused
+ * POST /api/tts → base64 MP3 응답
+ * @param {string}      text  - 읽어줄 텍스트
+ * @param {HTMLElement} btnEl - TTS 버튼 요소
+ */
 async function toggleModalTTS(text, btnEl) {
+  // 자유학습 TTS가 재생 중이면 먼저 중지
   if (typeof stopOtherTTS === "function") stopOtherTTS();
 
   if (currentModalTtsState === "playing") {
@@ -21,14 +31,17 @@ async function toggleModalTTS(text, btnEl) {
     btnEl.innerHTML = "🔊 음성 듣기";
     return;
   }
+
   if (currentModalTtsState === "paused") {
     if (currentModalAudio) currentModalAudio.play();
     currentModalTtsState = "playing";
     btnEl.innerHTML = "⏸️ 음성 중지";
     return;
   }
+
   if (currentModalTtsState === "loading") return;
 
+  // idle → 음성 생성 시작
   currentModalTtsState = "loading";
   btnEl.innerHTML = "⏳ 생성 중...";
   btnEl.disabled = true;
@@ -37,8 +50,9 @@ async function toggleModalTTS(text, btnEl) {
     const res = await apiFetch("/api/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text })
+      body: JSON.stringify({ text: text })
     });
+
     if (!res.ok) throw new Error("TTS API 오류");
     const data = await res.json();
     const audioData = typeof data === "string" ? data : data.audio_b64;
@@ -66,14 +80,24 @@ async function toggleModalTTS(text, btnEl) {
   }
 }
 
-// 분수(3/4) → LaTeX(\frac{3}{4}) 변환. 이미 LaTeX가 있으면 그대로 반환
+// ─── 수식 텍스트 유틸 ──────────────────────────────────────────
+
+/**
+ * 분수 표기(3/4)를 LaTeX(\frac{3}{4})로 변환 (이미 LaTeX면 그대로 반환)
+ * @param {string} text
+ * @returns {string}
+ */
 function prepareMathDisplayText(text) {
   const raw = String(text || "");
   if (/[\\$]/.test(raw)) return raw;
   return raw.replace(/(\d+)\s*\/\s*(\d+)/g, "\\(\\frac{$1}{$2}\\)");
 }
 
-// LaTeX 수식을 읽기 쉬운 형식으로 변환 (디버깅용)
+/**
+ * LaTeX 기호를 일반 텍스트로 변환 (콘솔 디버깅용)
+ * @param {string} text
+ * @returns {string}
+ */
 function formatMathForConsole(text) {
   return String(text || "")
     .replace(/\\\(/g, "").replace(/\\\)/g, "").replace(/\$/g, "")
@@ -84,6 +108,11 @@ function formatMathForConsole(text) {
     .replace(/\s+/g, " ").trim();
 }
 
+/**
+ * DOM 요소에 수식 텍스트를 설정하고 MathJax 렌더링
+ * @param {string} targetId - 요소 id
+ * @param {string} text     - 표시할 텍스트
+ */
 function setMathText(targetId, text) {
   const el = document.getElementById(targetId);
   if (!el) return;
@@ -91,15 +120,25 @@ function setMathText(targetId, text) {
   try {
     if (typeof renderMath === "function") renderMath(targetId);
   } catch (e) {
-    console.error("수식 렌더링 오류:", e);
+    console.error("수식 렌더링 중 오류 발생:", e);
   }
 }
 
+/**
+ * LaTeX 포함 텍스트를 읽기 쉬운 형식으로 콘솔 출력 (디버그용)
+ * @param {string} label
+ * @param {string} text
+ */
 function logMathText(label, text) {
   console.log(`${label}:`, formatMathForConsole(text));
 }
 
-// 모달 TTS 오디오 정지 및 상태 초기화
+// ─── 모달 공통 ─────────────────────────────────────────────────
+
+/**
+ * 모달 TTS 음성 정지 및 상태 초기화
+ * closeResultModal / resetModal / renderToday 에서 호출
+ */
 function stopAllModalAudio() {
   if (currentModalAudio) {
     currentModalAudio.pause();
@@ -109,7 +148,10 @@ function stopAllModalAudio() {
   currentModalTtsState = "idle";
 }
 
-// 모달 내용 전체 초기화 (새 내용 표시 전 호출)
+/**
+ * 모달 내용 전체 초기화 (제목, 메시지, 풀이박스, TTS버튼, 다음버튼)
+ * 새 내용 표시 전에 항상 호출
+ */
 function resetModal() {
   stopAllModalAudio();
 
@@ -121,8 +163,8 @@ function resetModal() {
   const actionBtn = document.getElementById("resultActionBtn");
 
   if (titleEl) titleEl.innerText = "";
-  if (msgEl) { msgEl.innerHTML = ""; msgEl.style.display = "block"; }
-  if (solEl) { solEl.innerText = ""; solEl.style.display = "none"; }
+  if (msgEl)  { msgEl.innerHTML = ""; msgEl.style.display = "block"; }
+  if (solEl)  { solEl.innerText = ""; solEl.style.display = "none"; }
   if (solBox) solBox.style.display = "none";
   if (ttsBtn) { ttsBtn.style.display = "none"; ttsBtn.innerHTML = "🔊 음성 듣기"; }
   if (actionBtn) {
@@ -132,7 +174,11 @@ function resetModal() {
   }
 }
 
-// 모달 하단 버튼 설정 (cloneNode로 이전 이벤트 제거)
+/**
+ * 모달 하단 다음 버튼 설정 (cloneNode로 기존 이벤트 초기화 후 교체)
+ * @param {Function} handler - 클릭 시 실행할 함수
+ * @param {string}   label   - 버튼 텍스트
+ */
 function setResultAction(handler, label) {
   const oldBtn = document.getElementById("resultActionBtn");
   if (!oldBtn) return;
@@ -147,7 +193,14 @@ function setResultAction(handler, label) {
   oldBtn.parentNode.replaceChild(newBtn, oldBtn);
 }
 
-// 풀이/개념 설명 모달 표시 (TTS 버튼 선택적)
+/**
+ * 풀이/개념 설명 모달 표시 (루미 이미지 + 내용 + TTS 버튼 선택)
+ * @param {string}   title      - 모달 제목
+ * @param {string}   content    - 표시 내용 (수식 포함 가능)
+ * @param {string}   buttonText - 다음 버튼 텍스트
+ * @param {Function} onNext     - 다음 버튼 클릭 시 실행 함수
+ * @param {boolean}  showTts    - TTS 버튼 표시 여부
+ */
 function showSolutionModal(title, content, buttonText, onNext, showTts = false) {
   resetModal();
 
@@ -160,29 +213,35 @@ function showSolutionModal(title, content, buttonText, onNext, showTts = false) 
   if (solBox) {
     solBox.style.display = "block";
     solBox.innerHTML = `
-      <div style="display: flex; align-items: center;
-              margin-top: -40px; margin-bottom: 15px;
-              border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">
-        <img src="assets/images/main_rumi.png" alt="루미 선생님"
-             style="width: 160px; height: auto; margin-top: 0; margin-right: 15px;">
-        <h3 style="margin: 0; font-size: 2rem; color: #333;">💡 루미 선생님의 풀이 설명</h3>
-      </div>
-      <div id="solutionText" style="font-size: 1.1rem; line-height: 1.6; color: #444; white-space: pre-wrap;"></div>
+      <div style="display:flex; align-items:center; margin-top:-75px; margin-bottom:6px; border-bottom:2px solid #e0e0e0; padding-bottom:12px; padding-left:30px;">
+        <img
+          src="/assets/images/main_rumi.png"
+          alt="루미 선생님"
+          style="width:200px; height:auto; margin-top:0; margin-right:0; flex-shrink:0;"
+        ><h3 style="margin:0 0 0 40px; font-size:1.7rem; color:#333;">💡 루미 선생님의 풀이 설명</h3>
+      </div><div
+        id="solutionText"
+        style="font-size:1.3rem; color:#444; padding-top:40px; padding-left:20px; padding-right:20px;"
+      ></div>
     `;
   }
 
+  // solBox.innerHTML 재작성 후 solutionText 참조 갱신
   const newSolEl = document.getElementById("solutionText");
   if (newSolEl) {
     newSolEl.style.display = "block";
     newSolEl.innerText = prepareMathDisplayText(content);
-    if (typeof renderMath === "function") setTimeout(() => renderMath("solutionText"), 50);
+    if (typeof renderMath === "function") {
+      setTimeout(() => renderMath("solutionText"), 50);
+    }
   }
 
   if (ttsBtn) {
     if (showTts) {
       ttsBtn.style.display = "inline-block";
       ttsBtn.onclick = (e) => {
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         toggleModalTTS(content, ttsBtn);
       };
     } else {
@@ -194,7 +253,13 @@ function showSolutionModal(title, content, buttonText, onNext, showTts = false) 
   openResultModal();
 }
 
-// 학생 텍스트 입력 모달 표시
+/**
+ * 텍스트 입력 모달 표시 (학생 직접 설명 단계에서 사용)
+ * @param {string}   title       - 모달 제목
+ * @param {string}   placeholder - textarea 힌트 텍스트
+ * @param {string}   buttonText  - 제출 버튼 텍스트
+ * @param {Function} onSubmit    - 입력값을 받아 처리하는 콜백
+ */
 function showInputModal(title, placeholder, buttonText, onSubmit) {
   resetModal();
   const titleEl = document.getElementById("resultTitle");
@@ -219,7 +284,11 @@ function showInputModal(title, placeholder, buttonText, onSubmit) {
   }
 }
 
-// 수학 문제 + 답안 입력 모달 표시
+/**
+ * 문제 모달 표시 (문제 텍스트 + 이미지 + 답안 입력 + 제출 버튼)
+ * @param {object} prob     - 문제 객체 (문제/정답/단원 포함)
+ * @param {string} imageB64 - 문제 이미지 base64 (없으면 빈 문자열)
+ */
 function showQuestionModal(prob, imageB64 = "") {
   resetModal();
   const titleEl = document.getElementById("resultTitle");
@@ -251,29 +320,37 @@ function showQuestionModal(prob, imageB64 = "") {
   }
 }
 
-// "오늘 학습" 섹션 초기화 (goPage("today") 호출 시 실행)
+// ─── 오늘 학습 초기화 ──────────────────────────────────────────
+
+/**
+ * 오늘 학습 화면 초기화 - goPage("today") 시 호출
+ * 단원 선택 영역 표시, 학습 시작 버튼 이벤트 등록 (중복 방지)
+ * API: POST /api/explain → AI 개념 설명 요청
+ */
 function renderToday() {
   const selectUnit = document.getElementById("step-select_unit");
   if (selectUnit) selectUnit.style.display = "block";
 
+  // 모달 X 버튼 클릭 시 TTS 즉시 정지
   const closeBtn = document.querySelector("#resultModal .close-btn") ||
                    document.querySelector("#resultModal .modal-close");
-  if (closeBtn) closeBtn.addEventListener("click", () => stopAllModalAudio());
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => stopAllModalAudio());
+  }
 
+  // 학습 시작 버튼 이벤트 (data-bound로 중복 방지)
   const btnStart = document.getElementById("btn-start");
   if (btnStart && !btnStart.dataset.bound) {
     btnStart.dataset.bound = "1";
     btnStart.addEventListener("click", async () => {
-      document.getElementById("loading-overlay").style.display = "flex";
-      await new Promise(resolve => setTimeout(resolve, 100));
-
       const unit = document.getElementById("unit-select")?.value;
       if (!unit) {
-        document.getElementById("loading-overlay").style.display = "none";
         showCustomPopup("단원을 선택하세요.😄");
         return;
       }
 
+      document.getElementById("loading-overlay").style.display = "flex";
+      await new Promise(resolve => setTimeout(resolve, 100));
       localStorage.setItem("selected_unit", unit);
 
       try {
@@ -297,7 +374,11 @@ function renderToday() {
   }
 }
 
-// 학생 이해도 직접 설명 모달 (POST /api/explain/evaluate)
+/**
+ * 학생 직접 설명 입력 모달 표시 후 AI 이해도 평가
+ * API: POST /api/explain/evaluate → is_passed 기준으로 문제풀기 or 보충설명 분기
+ * @param {string} unit - 현재 학습 단원명
+ */
 function showStudentExplainModal(unit) {
   showInputModal(`🗣️ ${unit} 직접 설명하기`, "어떻게 이해했는지 적어줘", "설명 완료! ✨", async (studentText) => {
     if (!studentText.trim()) return showCustomPopup("설명을 적어주세요.😊");
@@ -311,8 +392,10 @@ function showStudentExplainModal(unit) {
       const feedback = data.feedback || "평가 결과가 없습니다.";
 
       if (data.is_passed) {
+        // 통과 → 문제 풀기
         showSolutionModal("👨‍🏫 이해도 검토 결과", feedback, "이제 문제 풀기 📝", async () => { await loadProblem(); }, false);
       } else {
+        // 미통과 → 보충 설명
         showSolutionModal("👨‍🏫 이해도 검토 결과", feedback, "더 쉬운 보충 설명 듣기 ➡️", async () => {
           showSolutionModal("📖 보충 학습 (더 쉬운 설명)", "루미 선생님이 보충 설명을 준비 중... ⏳", "기다리는 중...", () => {}, false);
           try {
@@ -330,7 +413,11 @@ function showStudentExplainModal(unit) {
   });
 }
 
-// 단원 목록 로드 (GET /api/units)
+// ─── 단원 목록 / 문제 로드 / 채점 ─────────────────────────────
+
+/**
+ * GET /api/units → unit-select 드롭다운 옵션 채우기
+ */
 async function loadUnits() {
   const select = document.getElementById("unit-select");
   if (!select) return;
@@ -347,7 +434,10 @@ async function loadUnits() {
   } catch (e) { console.error("단원 목록 로드 실패"); }
 }
 
-// 문제 로드 (GET /api/problem?unit=...)
+/**
+ * GET /api/problem?unit=... → 문제 수신 후 showQuestionModal 호출
+ * 문제 데이터는 localStorage에 저장 (submitCurrentAnswer에서 사용)
+ */
 async function loadProblem() {
   const unit = localStorage.getItem("selected_unit");
   try {
@@ -362,14 +452,18 @@ async function loadProblem() {
 
     showQuestionModal(prob, data.image_b64 || "");
   } catch (e) {
-    console.error("문제 로드 오류:", e);
+    console.error("문제 로드 중 상세 오류:", e);
     showCustomPopup("문제를 불러오지 못했습니다.😢");
   }
 }
 
-// 답안 제출 및 채점 (POST /api/evaluate)
+/**
+ * POST /api/evaluate → AI 채점 후 showFinalFeedbackModal 호출
+ * @param {string|null} answerText - 학생 입력 답안
+ */
 async function submitCurrentAnswer(answerText = null) {
   const studentAnswer = answerText ?? "";
+
   const savedData = localStorage.getItem("current_problem");
   if (!savedData) {
     showCustomPopup("문제 데이터가 사라졌습니다. 다시 시도해 주세요.😢");
@@ -386,6 +480,7 @@ async function submitCurrentAnswer(answerText = null) {
     });
 
     const data = await res.json().catch(() => ({}));
+
     if (!res.ok) {
       console.error("서버 채점 에러:", data);
       throw new Error(data.detail || "채점 실패");
@@ -395,8 +490,9 @@ async function submitCurrentAnswer(answerText = null) {
     showFinalFeedbackModal(data.feedback, data.is_correct);
 
   } catch (err) {
-    console.error("제출 오류:", err);
+    console.error("제출 프로세스 중 오류:", err);
     showCustomPopup("채점 중 오류가 발생했습니다.😢 " + err.message);
+
     const submitBtn = document.getElementById("modal-submit-btn");
     if (submitBtn) {
       submitBtn.disabled = false;
@@ -405,16 +501,25 @@ async function submitCurrentAnswer(answerText = null) {
   }
 }
 
-// 채점 결과 피드백 모달 표시
+// ─── 최종 피드백 모달 ──────────────────────────────────────────
+
+/**
+ * 채점 결과 피드백을 feedbackModal에 표시
+ * "다시 풀기"(loadProblem) / "다른 단원 선택"(goPage today) 버튼 제공
+ * 빠른 더블클릭 방지: 500ms 후 버튼 활성화
+ * @param {string}  feedback  - AI 채점 피드백 텍스트
+ * @param {boolean} isCorrect - 정답 여부
+ */
 function showFinalFeedbackModal(feedback, isCorrect) {
-  const feedbackText  = document.getElementById("feedbackText");
-  const retryBtn      = document.getElementById("feedbackRetryBtn");
-  const nextUnitBtn   = document.getElementById("feedbackNextUnitBtn");
-  const closeBtn      = document.getElementById("closeFeedbackModalBtn");
+  const feedbackText = document.getElementById("feedbackText");
+  const retryBtn     = document.getElementById("feedbackRetryBtn");
+  const nextUnitBtn  = document.getElementById("feedbackNextUnitBtn");
+  const closeBtn     = document.getElementById("closeFeedbackModalBtn");
 
   if (feedbackText) {
     const processedText = (typeof prepareMathDisplayText === "function")
-                          ? prepareMathDisplayText(feedback) : feedback;
+                          ? prepareMathDisplayText(feedback)
+                          : feedback;
     feedbackText.innerText = processedText;
     if (typeof renderMath === "function") renderMath("feedbackText");
   }
@@ -446,10 +551,10 @@ function showFinalFeedbackModal(feedback, isCorrect) {
     console.error("openFeedbackModal 함수가 정의되지 않았습니다.");
   }
 
-  // 빠른 더블 클릭 방지: 500ms 후 버튼 활성화
+  // 500ms 후 버튼 활성화 (빠른 중복 클릭 방지)
   setTimeout(() => {
-    if (retryBtn) retryBtn.disabled = false;
+    if (retryBtn)    retryBtn.disabled = false;
     if (nextUnitBtn) nextUnitBtn.disabled = false;
-    if (closeBtn) closeBtn.disabled = false;
+    if (closeBtn)    closeBtn.disabled = false;
   }, 500);
 }
