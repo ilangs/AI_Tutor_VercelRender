@@ -11,7 +11,7 @@ const API = "";
 let currentPage = "";
 
 // ─── 모달 사운드 ───────────────────────────────────────────────
-const modalSound = new Audio("/assets/sound/button.mp3");
+const modalSound = new Audio("/assets/audio/button.mp3");
 modalSound.preload = "auto";
 
 let modalSoundUnlocked = false;
