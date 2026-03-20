@@ -58,6 +58,12 @@ function stopAllAudio() {
     modalSound.pause();
     modalSound.currentTime = 0;
   }
+
+  // 4. 오늘의 학습 모달 TTS 중지 (DOM 미첨부 Audio 객체)
+  if (typeof stopAllModalAudio === "function") stopAllModalAudio();
+
+  // 5. AI 자유학습 TTS 중지 (DOM 미첨부 Audio 객체)
+  if (typeof stopOtherTTS === "function") stopOtherTTS(null);
 }
 
 // ─── 인증 ──────────────────────────────────────────────────────
