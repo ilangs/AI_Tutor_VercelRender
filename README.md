@@ -124,27 +124,3 @@ python -m uvicorn server:app --reload --port 10000
 ## 📄 라이선스
 
 교육 목적으로 제작된 프로젝트입니다. (AI Agent 과정)
-
-```
-AI_Tutor_VercelRender/
-├── .env
-├── .gitignore
-├── README.md
-├── backend/
-│   ├── app/
-│   ├── assets/
-│   ├── RAG_sys/
-│   ├── data/
-│   ├── database/
-│   ├── server.py
-│   ├── requirements.txt
-│   ├── render.yaml
-│   └── Dockerfile
-└── frontend/
-    ├── login.html
-    ├── app.html
-    ├── vercel.json
-    ├── js/
-    ├── css/
-    └── assets/
-```
