@@ -37,6 +37,29 @@ function playModalSound() {
   modalSound.play().catch(err => console.log("사운드 재생 실패:", err));
 }
 
+/**
+ * [추가] 모든 오디오 및 TTS 재생을 즉시 중지하는 함수
+ */
+function stopAllAudio() {
+  // 1. Web Speech API (TTS) 중지
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+
+  // 2. 페이지 내 모든 audio 및 video 태그 중지
+  const players = document.querySelectorAll('audio, video');
+  players.forEach(player => {
+    player.pause();
+    player.currentTime = 0;
+  });
+
+  // 3. 공통 모달 사운드 중지
+  if (modalSound) {
+    modalSound.pause();
+    modalSound.currentTime = 0;
+  }
+}
+
 // ─── 인증 ──────────────────────────────────────────────────────
 
 /** sessionStorage에서 JWT 토큰 반환 */
@@ -153,6 +176,9 @@ async function initApp() {
  * @param {string} pageName - 이동할 페이지 이름 (home / today / free / exam / score / token)
  */
 function goPage(pageName) {
+  // [수정] 페이지 이동 시 현재 재생 중인 모든 소리를 중지함
+  stopAllAudio();
+
   document.querySelectorAll(".page").forEach(p => (p.style.display = "none"));
 
   const target = document.getElementById(`page-${pageName}`);
@@ -240,7 +266,8 @@ function openResultModal() {
 
 /** resultModal 닫기 (TTS 정지 포함) */
 function closeResultModal() {
-  stopAllModalAudio();
+  // 기존 정지 함수 활용
+  stopAllAudio();
   const modal = document.getElementById("resultModal");
   if (modal) {
     modal.classList.add("hidden");
@@ -293,12 +320,14 @@ function bindAppEvents() {
 // 회원가입 모달의 캐릭터 버튼 단일 선택 처리
 document.addEventListener("DOMContentLoaded", () => {
   const characterButtons = document.querySelectorAll(".character-btn");
-  characterButtons.forEach(button => {
-    button.addEventListener("click", () => {
-      characterButtons.forEach(btn => btn.classList.remove("selected"));
-      button.classList.add("selected");
+  if (characterButtons.length > 0) {
+    characterButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        characterButtons.forEach(btn => btn.classList.remove("selected"));
+        button.classList.add("selected");
+      });
     });
-  });
+  }
 });
 
 // ─── 커스텀 팝업 ───────────────────────────────────────────────
@@ -310,12 +339,13 @@ document.addEventListener("DOMContentLoaded", () => {
 function showCustomPopup(message) {
   const popup = document.getElementById("custom-popup");
   const text = document.getElementById("popup-message");
-  text.innerText = message;
-  popup.style.display = "flex";
+  if (text) text.innerText = message;
+  if (popup) popup.style.display = "flex";
   playModalSound();
 }
 
 /** 커스텀 팝업 닫기 */
 function closeCustomPopup() {
-  document.getElementById("custom-popup").style.display = "none";
+  const popup = document.getElementById("custom-popup");
+  if (popup) popup.style.display = "none";
 }
